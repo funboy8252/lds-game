@@ -2,267 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temple Clicker: Ultimate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Temple Clicker</title>
     <style>
         :root {
-            --primary: #2c3e50; --accent: #d4af37; --bg: #f0f2f5; 
-            --white: #ffffff; --text: #333; --gold: #f1c40f;
+            --primary: #2c3e50; --accent: #d4af37; --bg: #f8f9fa; 
+            --white: #ffffff; --gold: #f1c40f;
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* Layout */
-        .sidebar { width: 380px; background: var(--white); border-right: 2px solid #ddd; display: flex; flex-direction: column; z-index: 10; }
-        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #ffffff 0%, #e2e8f0 100%); }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg); margin: 0; padding: 0; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
 
-        /* Top Bar */
-        .top-bar { width: 100%; background: var(--primary); color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .currency-display { font-size: 2.5rem; font-weight: bold; color: var(--gold); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        /* Top Stats Section */
+        .header {
+            background: var(--white); padding: 20px 15px; text-align: center;
+            border-bottom: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .score { font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0; }
+        .sps-text { font-size: 0.9rem; color: #666; margin-top: 5px; }
 
-        /* Temple Area */
-        #temple-container { position: relative; cursor: pointer; transition: transform 0.1s; }
-        #temple-container:active { transform: scale(0.92); }
-        #temple-emoji { font-size: 180px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1)); }
+        /* Central Play Area */
+        .game-area {
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; position: relative; padding-bottom: 80px;
+        }
+        #temple-btn {
+            font-size: 140px; cursor: pointer; user-select: none;
+            transition: transform 0.05s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
+        }
+        #temple-btn:active { transform: scale(0.9); }
+
+        .progress-container { width: 80%; margin-top: 20px; }
+        .progress-bar { background: #e0e0e0; height: 12px; border-radius: 6px; overflow: hidden; }
+        #progress-fill { background: var(--accent); width: 0%; height: 100%; transition: width 0.3s; }
+        .temple-label { font-weight: bold; color: var(--primary); margin-bottom: 8px; display: block; text-align: center; }
+
+        /* iOS-Style Bottom Menu */
+        .bottom-sheet {
+            position: fixed; bottom: 0; width: 100%; background: var(--white);
+            border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            height: 45vh; display: flex; flex-direction: column; z-index: 100;
+        }
+        .handle { width: 40px; height: 5px; background: #ccc; border-radius: 3px; margin: 10px auto; }
+        .upgrade-list { flex: 1; overflow-y: auto; padding: 0 15px 20px; }
+
+        /* Upgrade Cards */
+        .upgrade-card {
+            display: flex; align-items: center; background: #f1f3f5;
+            padding: 12px; margin-bottom: 10px; border-radius: 12px;
+            border: 1px solid transparent;
+        }
+        .upgrade-card:active { background: #e9ecef; }
+        .info { flex: 1; }
+        .info b { font-size: 1rem; display: block; color: var(--primary); }
+        .info span { font-size: 0.8rem; color: #777; }
         
-        /* Floating Text Effect */
-        .floating-text { position: absolute; color: var(--primary); font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; }
-        @keyframes floatUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-100px); } }
+        .buy-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 16px; border-radius: 20px; font-weight: bold;
+            min-width: 80px; font-size: 0.9rem;
+        }
+        .buy-btn:disabled { background: #ccc; opacity: 0.6; }
 
-        /* Upgrades List */
-        .upgrade-tabs { display: flex; background: #eee; }
-        .tab { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: bold; }
-        .tab.active { background: var(--white); border-bottom: 3px solid var(--accent); }
-        
-        .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
-        .item { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; transition: 0.2s; }
-        .item:hover { transform: translateX(5px); border-color: var(--accent); }
-        .item-info { flex: 1; }
-        .item-info b { display: block; font-size: 1.1rem; }
-        .item-info small { color: #666; }
-        
-        button.buy-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; min-width: 80px; }
-        button.buy-btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
-        button.buy-btn:hover:not(:disabled) { background: var(--accent); }
+        /* Floating Text */
+        .float {
+            position: absolute; color: var(--accent); font-weight: bold;
+            pointer-events: none; animation: floatUp 0.6s ease-out forwards;
+        }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
 
-        /* Progress */
-        .progress-wrap { width: 60%; margin-top: 30px; }
-        .bar-bg { background: #cbd5e0; height: 24px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); }
-        #bar-fill { background: linear-gradient(90deg, #d4af37, #f1c40f); width: 0%; height: 100%; transition: width 0.3s; }
-
-        .btn-action { background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
+        /* Dedicate Button Overlay */
+        #dedicate-overlay {
+            position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+            background: var(--gold); color: var(--primary); padding: 15px 30px;
+            border-radius: 30px; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: none; z-index: 50; border: none; font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="upgrade-tabs">
-        <button class="tab active">Callings & Tools</button>
-    </div>
-    <div class="scroll-area" id="upgrade-list">
+<div class="header">
+    <div class="score" id="points">0</div>
+    <div class="sps-text">Service Points | <span id="sps">0</span>/sec</div>
+</div>
+
+<div class="game-area" id="touch-zone">
+    <button id="dedicate-overlay" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
+    
+    <span class="temple-label" id="temple-name">St. George Utah</span>
+    <div id="temple-btn">🏛️</div>
+
+    <div class="progress-container">
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <div style="text-align: center; font-size: 0.8rem; margin-top: 5px; color: #888;">
+            Construction: <span id="percent">0</span>%
         </div>
-    <div style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">
-        <button onclick="saveGame()">💾 Save Game</button>
-        <button onclick="resetGame()">🧹 Hard Reset</button>
     </div>
 </div>
 
-<div class="main">
-    <div class="top-bar">
-        <div class="currency-display"><span id="points">0</span> SP</div>
-        <div>Service Points Per Second: <span id="sps">0</span> | Multiplier: <span id="mult">1.0</span>x</div>
-    </div>
-
-    <h2 id="temple-name" style="margin-top: 40px; color: var(--primary);">St. George Utah</h2>
-    
-    <div id="temple-container">
-        <div id="temple-emoji">🏛️</div>
-    </div>
-
-    <div class="progress-wrap">
-        <div class="bar-bg"><div id="bar-fill"></div></div>
-        <p style="text-align: center; font-weight: bold; margin-top: 10px;">
-            Goal: <span id="goal-text">0</span> SP (<span id="percent">0</span>%)
-        </p>
-    </div>
-
-    <button id="dedicate-btn" class="btn-action" style="display: none;" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
+<div class="bottom-sheet">
+    <div class="handle"></div>
+    <div style="padding: 0 15px 10px; font-weight: bold; font-size: 1.1rem; border-bottom: 1px solid #eee;">Callings & Upgrades</div>
+    <div class="upgrade-list" id="upgrade-list">
+        </div>
 </div>
 
 <script>
-    // --- GAME DATA ---
-    let game = {
-        sp: 0,
-        totalSps: 0,
-        faithMult: 1.0,
-        templeIdx: 0,
-        inventory: [] // Stores counts of upgrades
+    let state = {
+        sp: 0, sps: 0, faith: 1.0, templeIdx: 0,
+        inventory: new Array(10).fill(0)
     };
 
     const temples = [
-        { name: "St. George Utah", goal: 1000, icon: "🏛️" },
-        { name: "Salt Lake City", goal: 15000, icon: "🕍" },
-        { name: "Cardston Alberta", goal: 75000, icon: "🍁" },
-        { name: "Laie Hawaii", goal: 250000, icon: "🌺" },
-        { name: "Johannesburg South Africa", goal: 1000000, icon: "🇿🇦" },
-        { name: "Hong Kong China", goal: 5000000, icon: "🏙️" },
-        { name: "Salt Lake (Rededicated)", goal: 25000000, icon: "✨" }
+        { name: "St. George Utah", goal: 500, icon: "🏛️" },
+        { name: "Salt Lake City", goal: 5000, icon: "🕍" },
+        { name: "Rome Italy", goal: 50000, icon: "🇮🇹" },
+        { name: "Tokyo Japan", goal: 250000, icon: "⛩️" }
     ];
 
     const upgrades = [
-        { id: 0, name: "Cleaning Assignment", desc: "Keep the grounds tidy.", cost: 15, sps: 0.5 },
-        { id: 1, name: "Youth Service", desc: "Enthusiastic volunteers.", cost: 100, sps: 3 },
-        { id: 2, name: "Family History Indexing", desc: "Points for every record.", cost: 500, sps: 12 },
-        { id: 3, name: "Ward Organist", desc: "Spiritual music boosts SP.", cost: 2000, sps: 45 },
-        { id: 4, name: "Temple Architect", desc: "Expert design skills.", cost: 8000, sps: 150 },
-        { id: 5, name: "Stone Masonry", desc: "Heavy lifting made easy.", cost: 25000, sps: 450 },
-        { id: 6, name: "Full-time Missionaries", desc: "The work accelerates.", cost: 100000, sps: 1200 },
-        { id: 7, name: "Global Satellite Feed", desc: "Unity across the world.", cost: 500000, sps: 5000 },
-        { id: 8, name: "Tabernacle Choir", desc: "A heavenly SP engine.", cost: 2000000, sps: 18000 },
-        { id: 9, name: "Celestial Inspiration", desc: "The ultimate production.", cost: 10000000, sps: 100000 }
+        { name: "Primary Volunteer", cost: 15, sps: 0.5 },
+        { name: "Youth Service", cost: 100, sps: 3 },
+        { name: "Indexing Group", cost: 500, sps: 15 },
+        { name: "Ward Organist", cost: 2500, sps: 60 },
+        { name: "Temple Architect", cost: 12000, sps: 200 },
+        { name: "Brick Mason", cost: 50000, sps: 800 },
+        { name: "Tabernacle Choir", cost: 250000, sps: 3500 }
     ];
 
-    // --- INITIALIZATION ---
     function init() {
-        const saved = localStorage.getItem('templeClickerSave');
-        if (saved) {
-            const data = JSON.parse(saved);
-            game = data;
-        } else {
-            // Fill inventory with zeros if new game
-            game.inventory = new Array(upgrades.length).fill(0);
-        }
-        renderUpgrades();
-        updateDisplay();
-        setInterval(gameLoop, 100); // 10 ticks per second
+        const saved = localStorage.getItem('templeMobileSave');
+        if (saved) state = JSON.parse(saved);
+        render();
+        setInterval(loop, 100);
     }
 
-    function renderUpgrades() {
-        const container = document.getElementById('upgrade-list');
-        container.innerHTML = '';
-        
-        upgrades.forEach((up, i) => {
-            const count = game.inventory[i];
-            const currentCost = Math.floor(up.cost * Math.pow(1.15, count));
-            
-            const item = document.createElement('div');
-            item.className = 'item';
-            item.innerHTML = `
-                <div class="item-info">
-                    <b>${up.name} (${count})</b>
-                    <small>${up.desc}<br>+${up.sps} SP/s</small>
+    function render() {
+        const list = document.getElementById('upgrade-list');
+        list.innerHTML = upgrades.map((u, i) => {
+            const count = state.inventory[i] || 0;
+            const cost = Math.floor(u.cost * Math.pow(1.2, count));
+            return `
+                <div class="upgrade-card">
+                    <div class="info">
+                        <b>${u.name} (${count})</b>
+                        <span>+${u.sps} SP/s</span>
+                    </div>
+                    <button class="buy-btn" id="btn-${i}" onclick="buy(${i})" ${state.sp < cost ? 'disabled' : ''}>
+                        ${format(cost)}
+                    </button>
                 </div>
-                <button class="buy-btn" id="buy-${i}" onclick="buyUpgrade(${i})">${formatNum(currentCost)}</button>
             `;
-            container.appendChild(item);
-        });
+        }).join('');
     }
 
-    // --- LOGIC ---
-    function buyUpgrade(idx) {
-        const up = upgrades[idx];
-        const count = game.inventory[idx];
-        const currentCost = Math.floor(up.cost * Math.pow(1.15, count));
-
-        if (game.sp >= currentCost) {
-            game.sp -= currentCost;
-            game.inventory[idx]++;
+    function buy(i) {
+        const cost = Math.floor(upgrades[i].cost * Math.pow(1.2, state.inventory[i]));
+        if (state.sp >= cost) {
+            state.sp -= cost;
+            state.inventory[i]++;
             calculateSps();
-            renderUpgrades();
-            updateDisplay();
+            render();
+            updateUI();
         }
     }
 
     function calculateSps() {
-        let total = 0;
-        upgrades.forEach((up, i) => {
-            total += up.sps * game.inventory[i];
-        });
-        game.totalSps = total;
+        state.sps = upgrades.reduce((acc, u, i) => acc + (u.sps * state.inventory[i]), 0);
     }
 
-    document.getElementById('temple-container').onclick = (e) => {
-        const clickVal = 1 + (game.totalSps * 0.05); // Clicks are worth 5% of your PPS
-        game.sp += clickVal * game.faithMult;
+    document.getElementById('temple-btn').addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevents zooming on fast taps
+        let clickVal = (1 + (state.sps * 0.1)) * state.faith;
+        state.sp += clickVal;
         
-        spawnFloatingText(e.clientX, e.clientY, `+${Math.ceil(clickVal)}`);
-        updateDisplay();
-    };
+        const touch = e.touches[0];
+        spawnFloat(touch.pageX, touch.pageY, `+${Math.ceil(clickVal)}`);
+        updateUI();
+    });
 
-    function updateDisplay() {
-        document.getElementById('points').innerText = formatNum(Math.floor(game.sp));
-        document.getElementById('sps').innerText = formatNum((game.totalSps * game.faithMult).toFixed(1));
-        document.getElementById('mult').innerText = game.faithMult.toFixed(1);
+    function updateUI() {
+        document.getElementById('points').innerText = Math.floor(state.sp).toLocaleString();
+        document.getElementById('sps').innerText = format(state.sps * state.faith);
+        
+        const t = temples[state.templeIdx];
+        document.getElementById('temple-name').innerText = t.name;
+        document.getElementById('temple-btn').innerText = t.icon;
+        
+        let prog = (state.sp / t.goal) * 100;
+        document.getElementById('progress-fill').style.width = Math.min(prog, 100) + "%";
+        document.getElementById('percent').innerText = Math.min(Math.floor(prog), 100);
+        document.getElementById('dedicate-overlay').style.display = prog >= 100 ? 'block' : 'none';
 
-        const currentT = temples[game.templeIdx];
-        document.getElementById('temple-name').innerText = currentT.name;
-        document.getElementById('temple-emoji').innerText = currentT.icon;
-        document.getElementById('goal-text').innerText = formatNum(currentT.goal);
-
-        let progress = (game.sp / currentT.goal) * 100;
-        document.getElementById('bar-fill').style.width = Math.min(progress, 100) + "%";
-        document.getElementById('percent').innerText = Math.min(Math.floor(progress), 100);
-
-        // Toggle Dedicate Button
-        document.getElementById('dedicate-btn').style.display = progress >= 100 ? 'block' : 'none';
-
-        // Update Button Graying
-        upgrades.forEach((up, i) => {
-            const btn = document.getElementById(`buy-${i}`);
+        upgrades.forEach((u, i) => {
+            const btn = document.getElementById(`btn-${i}`);
             if (btn) {
-                const count = game.inventory[i];
-                const cost = Math.floor(up.cost * Math.pow(1.15, count));
-                btn.disabled = game.sp < cost;
+                const cost = Math.floor(u.cost * Math.pow(1.2, state.inventory[i]));
+                btn.disabled = state.sp < cost;
             }
         });
     }
 
     function dedicate() {
-        game.faithMult += 0.5;
-        game.sp = 0;
-        game.inventory = new Array(upgrades.length).fill(0);
-        game.totalSps = 0;
-        game.templeIdx = (game.templeIdx + 1) % temples.length;
-        
-        renderUpgrades();
-        updateDisplay();
-        saveGame();
-        alert("Temple Dedicated! You feel a boost in Faith (Multiplier Increased).");
+        state.faith += 0.5;
+        state.sp = 0;
+        state.inventory.fill(0);
+        state.templeIdx = (state.templeIdx + 1) % temples.length;
+        calculateSps();
+        render();
+        updateUI();
+        localStorage.setItem('templeMobileSave', JSON.stringify(state));
     }
 
-    function gameLoop() {
-        game.sp += (game.totalSps * game.faithMult) / 10;
-        updateDisplay();
+    function spawnFloat(x, y, text) {
+        const el = document.createElement('div');
+        el.className = 'float';
+        el.style.left = `${x - 20}px`;
+        el.style.top = `${y - 20}px`;
+        el.innerText = text;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 600);
     }
 
-    // --- HELPERS ---
-    function formatNum(num) {
-        if (num >= 1000000) return (num/1000000).toFixed(2) + "M";
-        if (num >= 1000) return (num/1000).toFixed(1) + "k";
-        return num;
+    function format(n) {
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+        return Math.floor(n);
     }
 
-    function spawnFloatingText(x, y, text) {
-        const div = document.createElement('div');
-        div.className = 'floating-text';
-        div.style.left = x + 'px';
-        div.style.top = y + 'px';
-        div.innerText = text;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 800);
+    function loop() {
+        state.sp += (state.sps * state.faith) / 10;
+        updateUI();
     }
 
-    function saveGame() {
-        localStorage.setItem('templeClickerSave', JSON.stringify(game));
-    }
-
-    function resetGame() {
-        if(confirm("Are you sure? This will delete all progress!")) {
-            localStorage.removeItem('templeClickerSave');
-            location.reload();
-        }
-    }
-
-    window.onload = init;
+    init();
 </script>
 </body>
 </html>
