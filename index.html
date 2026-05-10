@@ -1,869 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LDS Games">
-<link rel="apple-touch-icon" href="icon.png">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Clicker: Ultimate</title>
+    <style>
+        :root {
+            --primary: #2c3e50; --accent: #d4af37; --bg: #f0f2f5; 
+            --white: #ffffff; --text: #333; --gold: #f1c40f;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: var(--text); }
+        
+        /* Layout */
+        .sidebar { width: 380px; background: var(--white); border-right: 2px solid #ddd; display: flex; flex-direction: column; z-index: 10; }
+        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle, #ffffff 0%, #e2e8f0 100%); }
 
-<title>LDS Kids Games</title>
+        /* Top Bar */
+        .top-bar { width: 100%; background: var(--primary); color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .currency-display { font-size: 2.5rem; font-weight: bold; color: var(--gold); text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
-<style>
+        /* Temple Area */
+        #temple-container { position: relative; cursor: pointer; transition: transform 0.1s; }
+        #temple-container:active { transform: scale(0.92); }
+        #temple-emoji { font-size: 180px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1)); }
+        
+        /* Floating Text Effect */
+        .floating-text { position: absolute; color: var(--primary); font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; }
+        @keyframes floatUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-100px); } }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-    -webkit-tap-highlight-color:transparent;
-}
+        /* Upgrades List */
+        .upgrade-tabs { display: flex; background: #eee; }
+        .tab { flex: 1; padding: 15px; border: none; cursor: pointer; font-weight: bold; }
+        .tab.active { background: var(--white); border-bottom: 3px solid var(--accent); }
+        
+        .scroll-area { flex: 1; overflow-y: auto; padding: 15px; }
+        .item { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; transition: 0.2s; }
+        .item:hover { transform: translateX(5px); border-color: var(--accent); }
+        .item-info { flex: 1; }
+        .item-info b { display: block; font-size: 1.1rem; }
+        .item-info small { color: #666; }
+        
+        button.buy-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; min-width: 80px; }
+        button.buy-btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
+        button.buy-btn:hover:not(:disabled) { background: var(--accent); }
 
-body{
-    background:#0f172a;
-    color:white;
-    overflow:hidden;
-}
+        /* Progress */
+        .progress-wrap { width: 60%; margin-top: 30px; }
+        .bar-bg { background: #cbd5e0; height: 24px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); }
+        #bar-fill { background: linear-gradient(90deg, #d4af37, #f1c40f); width: 0%; height: 100%; transition: width 0.3s; }
 
-.screen{
-    position:absolute;
-    inset:0;
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    overflow:hidden;
-}
-
-.active{
-    display:flex;
-}
-
-button{
-    border:none;
-    cursor:pointer;
-}
-
-/* HOME */
-
-#home{
-    background:linear-gradient(180deg,#2563eb,#0f172a);
-    overflow:auto;
-}
-
-.title{
-    font-size:48px;
-    font-weight:900;
-    margin-top:40px;
-}
-
-.subtitle{
-    opacity:.8;
-    margin-top:10px;
-    margin-bottom:30px;
-}
-
-.grid{
-    width:95%;
-    max-width:500px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    padding-bottom:40px;
-}
-
-.card{
-    background:rgba(255,255,255,.12);
-    border-radius:28px;
-    padding:20px;
-}
-
-.icon{
-    font-size:55px;
-    margin-bottom:15px;
-}
-
-.card h2{
-    margin-bottom:10px;
-}
-
-.card p{
-    opacity:.75;
-    line-height:1.3;
-    margin-bottom:18px;
-}
-
-.play{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:18px;
-    background:white;
-    font-size:18px;
-    font-weight:800;
-}
-
-/* TOP */
-
-.top{
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:18px;
-    z-index:10;
-}
-
-.back{
-    width:58px;
-    height:58px;
-    border-radius:18px;
-    font-size:28px;
-    font-weight:900;
-}
-
-.score{
-    background:rgba(255,255,255,.15);
-    padding:12px 18px;
-    border-radius:18px;
-    font-weight:800;
-}
-
-.big{
-    font-size:36px;
-    font-weight:900;
-    margin-top:10px;
-}
-
-/* MEMORY */
-
-#memory{
-    background:linear-gradient(180deg,#7c3aed,#111827);
-}
-
-.memoryGrid{
-    width:95%;
-    max-width:450px;
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:12px;
-    margin-top:30px;
-}
-
-.memoryCard{
-    aspect-ratio:1/1;
-    background:#312e81;
-    border-radius:20px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:38px;
-    font-weight:900;
-    transition:.2s;
-}
-
-.memoryCard.show{
-    background:white;
-    color:black;
-}
-
-/* RUNNER */
-
-#runner{
-    background:linear-gradient(#38bdf8,#93c5fd 60%,#65a30d 60%);
-}
-
-.ground{
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height:130px;
-    background:#65a30d;
-}
-
-#player{
-    position:absolute;
-    left:60px;
-    bottom:130px;
-    font-size:70px;
-}
-
-.obstacle{
-    position:absolute;
-    bottom:130px;
-    font-size:55px;
-}
-
-.scroll{
-    position:absolute;
-    bottom:240px;
-    font-size:40px;
-}
-
-.jump{
-    position:absolute;
-    bottom:20px;
-    right:20px;
-    width:120px;
-    height:120px;
-    border-radius:999px;
-    background:white;
-    font-size:24px;
-    font-weight:900;
-}
-
-/* RED SEA */
-
-#sea{
-    background:#38bdf8;
-}
-
-.instructions{
-    margin-top:120px;
-    font-size:28px;
-    font-weight:900;
-    text-align:center;
-}
-
-#moses{
-    position:absolute;
-    bottom:120px;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:70px;
-}
-
-.wave{
-    position:absolute;
-    width:70px;
-    height:70px;
-    border-radius:999px;
-    background:#7dd3fc;
-}
-
-/* MAZE */
-
-#maze{
-    background:linear-gradient(180deg,#7c3aed,#111827);
-}
-
-.mazeBox{
-    position:relative;
-    width:340px;
-    height:500px;
-    background:#1e293b;
-    border-radius:24px;
-    margin-top:30px;
-}
-
-.path{
-    position:absolute;
-    background:#facc15;
-}
-
-#mazePlayer{
-    position:absolute;
-    width:40px;
-    height:40px;
-    border-radius:999px;
-    background:white;
-    left:20px;
-    top:430px;
-    z-index:5;
-}
-
-.goal{
-    position:absolute;
-    right:20px;
-    top:20px;
-    width:70px;
-    height:70px;
-    border-radius:20px;
-    background:#22c55e;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:35px;
-}
-
-.popup{
-    position:fixed;
-    top:30px;
-    left:50%;
-    transform:translateX(-50%);
-    background:white;
-    color:black;
-    padding:18px 26px;
-    border-radius:22px;
-    font-weight:900;
-    font-size:22px;
-    z-index:9999;
-    display:none;
-    box-shadow:0 10px 30px rgba(0,0,0,.35);
-}
-
-</style>
+        .btn-action { background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
+    </style>
 </head>
 <body>
 
-<div class="popup" id="popup"></div>
-
-<!-- HOME -->
-
-<div class="screen active" id="home">
-
-    <div class="title">
-        LDS Kids Games
+<div class="sidebar">
+    <div class="upgrade-tabs">
+        <button class="tab active">Callings & Tools</button>
     </div>
-
-    <div class="subtitle">
-        Fun games for kids
+    <div class="scroll-area" id="upgrade-list">
+        </div>
+    <div style="padding: 10px; text-align: center; border-top: 1px solid #ddd;">
+        <button onclick="saveGame()">💾 Save Game</button>
+        <button onclick="resetGame()">🧹 Hard Reset</button>
     </div>
-
-    <div class="grid">
-
-        <div class="card">
-            <div class="icon">🧠</div>
-
-            <h2>Memory Match</h2>
-
-            <p>
-                Match all the scripture cards.
-            </p>
-
-            <button class="play"
-            onclick="openScreen('memory')">
-            Play
-            </button>
-        </div>
-
-        <div class="card">
-            <div class="icon">🏃</div>
-
-            <h2>Scripture Run</h2>
-
-            <p>
-                Jump over rocks and collect scrolls.
-            </p>
-
-            <button class="play"
-            onclick="startRunner()">
-            Play
-            </button>
-        </div>
-
-        <div class="card">
-            <div class="icon">🌊</div>
-
-            <h2>Red Sea Escape</h2>
-
-            <p>
-                Swipe to dodge waves.
-            </p>
-
-            <button class="play"
-            onclick="startSea()">
-            Play
-            </button>
-        </div>
-
-        
-
-    </div>
-
 </div>
 
-<!-- MEMORY -->
-
-<div class="screen" id="memory">
-
-    <div class="top">
-
-        <button class="back"
-        onclick="goHome()">
-        ←
-        </button>
-
-        <div class="score">
-            Matches: <span id="matchText">0</span>
-        </div>
-
+<div class="main">
+    <div class="top-bar">
+        <div class="currency-display"><span id="points">0</span> SP</div>
+        <div>Service Points Per Second: <span id="sps">0</span> | Multiplier: <span id="mult">1.0</span>x</div>
     </div>
 
-    <div class="big">
-        Memory Match
+    <h2 id="temple-name" style="margin-top: 40px; color: var(--primary);">St. George Utah</h2>
+    
+    <div id="temple-container">
+        <div id="temple-emoji">🏛️</div>
     </div>
 
-    <div class="memoryGrid" id="memoryGrid"></div>
+    <div class="progress-wrap">
+        <div class="bar-bg"><div id="bar-fill"></div></div>
+        <p style="text-align: center; font-weight: bold; margin-top: 10px;">
+            Goal: <span id="goal-text">0</span> SP (<span id="percent">0</span>%)
+        </p>
+    </div>
 
+    <button id="dedicate-btn" class="btn-action" style="display: none;" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
 </div>
-
-<!-- RUNNER -->
-
-<div class="screen" id="runner">
-
-    <div class="top">
-
-        <button class="back"
-        onclick="goHome()">
-        ←
-        </button>
-
-        <div class="score">
-            Score: <span id="runnerScore">0</span>
-        </div>
-
-    </div>
-
-    <div id="player">🏃‍♂️</div>
-
-    <div class="ground"></div>
-
-    <button class="jump"
-    onclick="jump()">
-    JUMP
-    </button>
-
-</div>
-
-<!-- SEA -->
-
-<div class="screen" id="sea">
-
-    <div class="top">
-
-        <button class="back"
-        onclick="goHome()">
-        ←
-        </button>
-
-    </div>
-
-    <div class="instructions">
-        Swipe to dodge waves
-    </div>
-
-    <div id="moses">🧔</div>
-
-</div>
-
-
 
 <script>
+    // --- GAME DATA ---
+    let game = {
+        sp: 0,
+        totalSps: 0,
+        faithMult: 1.0,
+        templeIdx: 0,
+        inventory: [] // Stores counts of upgrades
+    };
 
-function showPopup(text){
+    const temples = [
+        { name: "St. George Utah", goal: 1000, icon: "🏛️" },
+        { name: "Salt Lake City", goal: 15000, icon: "🕍" },
+        { name: "Cardston Alberta", goal: 75000, icon: "🍁" },
+        { name: "Laie Hawaii", goal: 250000, icon: "🌺" },
+        { name: "Johannesburg South Africa", goal: 1000000, icon: "🇿🇦" },
+        { name: "Hong Kong China", goal: 5000000, icon: "🏙️" },
+        { name: "Salt Lake (Rededicated)", goal: 25000000, icon: "✨" }
+    ];
 
-    const popup=document.getElementById("popup");
+    const upgrades = [
+        { id: 0, name: "Cleaning Assignment", desc: "Keep the grounds tidy.", cost: 15, sps: 0.5 },
+        { id: 1, name: "Youth Service", desc: "Enthusiastic volunteers.", cost: 100, sps: 3 },
+        { id: 2, name: "Family History Indexing", desc: "Points for every record.", cost: 500, sps: 12 },
+        { id: 3, name: "Ward Organist", desc: "Spiritual music boosts SP.", cost: 2000, sps: 45 },
+        { id: 4, name: "Temple Architect", desc: "Expert design skills.", cost: 8000, sps: 150 },
+        { id: 5, name: "Stone Masonry", desc: "Heavy lifting made easy.", cost: 25000, sps: 450 },
+        { id: 6, name: "Full-time Missionaries", desc: "The work accelerates.", cost: 100000, sps: 1200 },
+        { id: 7, name: "Global Satellite Feed", desc: "Unity across the world.", cost: 500000, sps: 5000 },
+        { id: 8, name: "Tabernacle Choir", desc: "A heavenly SP engine.", cost: 2000000, sps: 18000 },
+        { id: 9, name: "Celestial Inspiration", desc: "The ultimate production.", cost: 10000000, sps: 100000 }
+    ];
 
-    popup.innerText=text;
-
-    popup.style.display="block";
-
-    clearTimeout(window.popupTimeout);
-
-    window.popupTimeout=setTimeout(()=>{
-
-        popup.style.display="none";
-
-    },1800);
-
-}
-
-function openScreen(id){
-
-    document.querySelectorAll(".screen")
-    .forEach(s=>s.classList.remove("active"));
-
-    document.getElementById(id)
-    .classList.add("active");
-}
-
-function goHome(){
-
-    stopRunner();
-
-    document.querySelectorAll(".screen")
-    .forEach(s=>s.classList.remove("active"));
-
-    document.getElementById("home")
-    .classList.add("active");
-}
-
-/* MEMORY */
-
-const symbols=[
-"📖","🌊","⭐","⛪",
-"📖","🌊","⭐","⛪",
-"🔥","👑","🐑","🧔",
-"🔥","👑","🐑","🧔"
-];
-
-let firstCard=null;
-let secondCard=null;
-let lock=false;
-let matches=0;
-
-function buildMemory(){
-
-    const grid=document.getElementById("memoryGrid");
-
-    grid.innerHTML="";
-
-    matches=0;
-
-    document.getElementById("matchText")
-    .innerText=0;
-
-    symbols
-    .sort(()=>Math.random()-.5)
-    .forEach(symbol=>{
-
-        const card=document.createElement("div");
-
-        card.className="memoryCard";
-
-        card.dataset.symbol=symbol;
-
-        card.onclick=()=>flipCard(card);
-
-        grid.appendChild(card);
-
-    });
-
-}
-
-function flipCard(card){
-
-    if(lock)return;
-
-    if(card.classList.contains("show"))return;
-
-    card.classList.add("show");
-
-    card.innerText=card.dataset.symbol;
-
-    if(!firstCard){
-
-        firstCard=card;
-
-    }else{
-
-        secondCard=card;
-
-        if(firstCard.dataset.symbol===secondCard.dataset.symbol){
-
-            matches++;
-            document.getElementById("matchText").innerText=matches;
-
-            if(matches===8){
-                showPopup("⭐ Level complete!");
-                setTimeout(()=>{
-                    buildMemory();
-                },1200);
-            }
-
-            firstCard=null;
-            secondCard=null;
-
-        }else{
-
-            lock=true;
-
-            setTimeout(()=>{
-
-                firstCard.classList.remove("show");
-                secondCard.classList.remove("show");
-
-                firstCard.innerText="";
-                secondCard.innerText="";
-
-                firstCard=null;
-                secondCard=null;
-
-                lock=false;
-
-            },700);
-
+    // --- INITIALIZATION ---
+    function init() {
+        const saved = localStorage.getItem('templeClickerSave');
+        if (saved) {
+            const data = JSON.parse(saved);
+            game = data;
+        } else {
+            // Fill inventory with zeros if new game
+            game.inventory = new Array(upgrades.length).fill(0);
         }
-
+        renderUpgrades();
+        updateDisplay();
+        setInterval(gameLoop, 100); // 10 ticks per second
     }
 
-}
+    function renderUpgrades() {
+        const container = document.getElementById('upgrade-list');
+        container.innerHTML = '';
+        
+        upgrades.forEach((up, i) => {
+            const count = game.inventory[i];
+            const currentCost = Math.floor(up.cost * Math.pow(1.15, count));
+            
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `
+                <div class="item-info">
+                    <b>${up.name} (${count})</b>
+                    <small>${up.desc}<br>+${up.sps} SP/s</small>
+                </div>
+                <button class="buy-btn" id="buy-${i}" onclick="buyUpgrade(${i})">${formatNum(currentCost)}</button>
+            `;
+            container.appendChild(item);
+        });
+    }
 
-buildMemory();
+    // --- LOGIC ---
+    function buyUpgrade(idx) {
+        const up = upgrades[idx];
+        const count = game.inventory[idx];
+        const currentCost = Math.floor(up.cost * Math.pow(1.15, count));
 
-/* SCRIPTURE RUN */
-
-let runnerLoop;
-let obstacleLoop;
-let scrollLoop;
-
-let jumping=false;
-let score=0;
-
-function startRunner(){
-
-    stopRunner();
-
-    openScreen("runner");
-
-    score=0;
-
-    document.getElementById("runnerScore")
-    .innerText=0;
-
-    const player=document.getElementById("player");
-
-    player.innerText="🏃‍♂️";
-
-    player.style.bottom="130px";
-
-    runnerLoop=setInterval(()=>{
-
-        score++;
-
-        document.getElementById("runnerScore")
-        .innerText=score;
-
-    },1000);
-
-    obstacleLoop=setInterval(createObstacle,2600);
-
-    scrollLoop=setInterval(createScroll,3500);
-
-}
-
-function createObstacle(){
-
-    const obstacle=document.createElement("div");
-
-    obstacle.className="obstacle";
-
-    obstacle.innerText=
-    ["🪨","🌵"]
-    [Math.floor(Math.random()*2)];
-
-    obstacle.style.left=window.innerWidth+"px";
-
-    document.getElementById("runner")
-    .appendChild(obstacle);
-
-    let x=window.innerWidth;
-
-    const move=setInterval(()=>{
-
-        x-=5;
-
-        obstacle.style.left=x+"px";
-
-        const playerBottom=
-        parseInt(
-        getComputedStyle(
-        document.getElementById("player")
-        ).bottom
-        );
-
-        if(x<110&&x>50&&playerBottom<170){
-
-            clearInterval(move);
-
-            showPopup("Game Over! Try Again!");
-
-            goHome();
-
+        if (game.sp >= currentCost) {
+            game.sp -= currentCost;
+            game.inventory[idx]++;
+            calculateSps();
+            renderUpgrades();
+            updateDisplay();
         }
+    }
 
-        if(x<-100){
+    function calculateSps() {
+        let total = 0;
+        upgrades.forEach((up, i) => {
+            total += up.sps * game.inventory[i];
+        });
+        game.totalSps = total;
+    }
 
-            obstacle.remove();
+    document.getElementById('temple-container').onclick = (e) => {
+        const clickVal = 1 + (game.totalSps * 0.05); // Clicks are worth 5% of your PPS
+        game.sp += clickVal * game.faithMult;
+        
+        spawnFloatingText(e.clientX, e.clientY, `+${Math.ceil(clickVal)}`);
+        updateDisplay();
+    };
 
-            clearInterval(move);
+    function updateDisplay() {
+        document.getElementById('points').innerText = formatNum(Math.floor(game.sp));
+        document.getElementById('sps').innerText = formatNum((game.totalSps * game.faithMult).toFixed(1));
+        document.getElementById('mult').innerText = game.faithMult.toFixed(1);
 
+        const currentT = temples[game.templeIdx];
+        document.getElementById('temple-name').innerText = currentT.name;
+        document.getElementById('temple-emoji').innerText = currentT.icon;
+        document.getElementById('goal-text').innerText = formatNum(currentT.goal);
+
+        let progress = (game.sp / currentT.goal) * 100;
+        document.getElementById('bar-fill').style.width = Math.min(progress, 100) + "%";
+        document.getElementById('percent').innerText = Math.min(Math.floor(progress), 100);
+
+        // Toggle Dedicate Button
+        document.getElementById('dedicate-btn').style.display = progress >= 100 ? 'block' : 'none';
+
+        // Update Button Graying
+        upgrades.forEach((up, i) => {
+            const btn = document.getElementById(`buy-${i}`);
+            if (btn) {
+                const count = game.inventory[i];
+                const cost = Math.floor(up.cost * Math.pow(1.15, count));
+                btn.disabled = game.sp < cost;
+            }
+        });
+    }
+
+    function dedicate() {
+        game.faithMult += 0.5;
+        game.sp = 0;
+        game.inventory = new Array(upgrades.length).fill(0);
+        game.totalSps = 0;
+        game.templeIdx = (game.templeIdx + 1) % temples.length;
+        
+        renderUpgrades();
+        updateDisplay();
+        saveGame();
+        alert("Temple Dedicated! You feel a boost in Faith (Multiplier Increased).");
+    }
+
+    function gameLoop() {
+        game.sp += (game.totalSps * game.faithMult) / 10;
+        updateDisplay();
+    }
+
+    // --- HELPERS ---
+    function formatNum(num) {
+        if (num >= 1000000) return (num/1000000).toFixed(2) + "M";
+        if (num >= 1000) return (num/1000).toFixed(1) + "k";
+        return num;
+    }
+
+    function spawnFloatingText(x, y, text) {
+        const div = document.createElement('div');
+        div.className = 'floating-text';
+        div.style.left = x + 'px';
+        div.style.top = y + 'px';
+        div.innerText = text;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 800);
+    }
+
+    function saveGame() {
+        localStorage.setItem('templeClickerSave', JSON.stringify(game));
+    }
+
+    function resetGame() {
+        if(confirm("Are you sure? This will delete all progress!")) {
+            localStorage.removeItem('templeClickerSave');
+            location.reload();
         }
+    }
 
-    },16);
-
-}
-
-function createScroll(){
-
-    const scroll=document.createElement("div");
-
-    scroll.className="scroll";
-
-    scroll.innerText="📜";
-
-    scroll.style.left=window.innerWidth+"px";
-
-    document.getElementById("runner")
-    .appendChild(scroll);
-
-    let x=window.innerWidth;
-
-    const move=setInterval(()=>{
-
-        x-=5;
-
-        scroll.style.left=x+"px";
-
-        if(x<120&&x>40&&jumping){
-
-            score+=5;
-
-            document.getElementById("runnerScore")
-            .innerText=score;
-
-            scroll.remove();
-
-            clearInterval(move);
-
-        }
-
-        if(x<-100){
-
-            scroll.remove();
-
-            clearInterval(move);
-
-        }
-
-    },16);
-
-}
-
-function jump(){
-
-    if(jumping)return;
-
-    jumping=true;
-
-    const player=document.getElementById("player");
-
-    let y=130;
-
-    const up=setInterval(()=>{
-
-        y+=10;
-
-        player.style.bottom=y+"px";
-
-        if(y>=320){
-
-            clearInterval(up);
-
-            const down=setInterval(()=>{
-
-                y-=8;
-
-                player.style.bottom=y+"px";
-
-                if(y<=130){
-
-                    clearInterval(down);
-
-                    jumping=false;
-
-                }
-
-            },16);
-
-        }
-
-    },16);
-
-}
-
-function stopRunner(){
-
-    clearInterval(runnerLoop);
-    clearInterval(obstacleLoop);
-    clearInterval(scrollLoop);
-}
-
-/* RED SEA */
-
-let seaLoop;
-
-function startSea(){
-
-    openScreen("sea");
-
-    clearInterval(seaLoop);
-
-    seaLoop=setInterval(createWave,1200);
-
-}
-
-function createWave(){
-
-    const wave=document.createElement("div");
-
-    wave.className="wave";
-
-    wave.style.left=
-    Math.random()*window.innerWidth+"px";
-
-    wave.style.top="-80px";
-
-    document.getElementById("sea")
-    .appendChild(wave);
-
-    let y=-80;
-
-    const move=setInterval(()=>{
-
-        y+=7;
-
-        wave.style.top=y+"px";
-
-        const moses=
-        document.getElementById("moses");
-
-        const mosesX=
-        moses.getBoundingClientRect().left;
-
-        const waveX=
-        wave.getBoundingClientRect().left;
-
-        if(
-        y>window.innerHeight-220 &&
-        Math.abs(waveX-mosesX)<60
-        ){
-
-            showPopup("🌊 The wave got you!");
-
-            goHome();
-
-        }
-
-        if(y>window.innerHeight){
-
-            wave.remove();
-
-            clearInterval(move);
-
-        }
-
-    },16);
-
-}
-
-document.addEventListener("touchmove",e=>{
-
-    if(
-    !document.getElementById("sea")
-    .classList.contains("active")
-    )return;
-
-    document.getElementById("moses")
-    .style.left=
-    e.touches[0].clientX+"px";
-
-});
-
-/* MAZE */
-
+    window.onload = init;
 </script>
-
 </body>
 </html>
