@@ -34,9 +34,29 @@
         .mode-toggle { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
 
         .game-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #temple-btn { font-size: clamp(100px, 20vw, 180px); cursor: pointer; user-select: none; transition: transform 0.05s; }
-        #temple-btn:active { transform: scale(0.9); }
         
+        /* THE PHOTO CLICKER STYLE */
+        #click-container {
+            width: clamp(200px, 40vw, 300px);
+            height: clamp(200px, 40vw, 300px);
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.05s;
+            border-radius: 20px; /* Rounded corners for the photo */
+            overflow: hidden; /* This crops the image */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid var(--card);
+        }
+        #click-container:active { transform: scale(0.92); }
+        
+        #temple-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* AUTO-CROP: Makes every photo a perfect square */
+            display: block;
+        }
+
         #boost-alert { 
             position: absolute; top: 20px; background: var(--accent); color: #000; 
             padding: 10px 20px; border-radius: 20px; font-weight: bold; 
@@ -61,8 +81,8 @@
         }
         .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .prog-wrap { width: 80%; max-width: 400px; margin-top: 20px; }
-        .bar { background: var(--border); height: 10px; border-radius: 5px; overflow: hidden; }
+        .prog-wrap { width: 80%; max-width: 400px; margin-top: 25px; }
+        .bar { background: var(--border); height: 12px; border-radius: 6px; overflow: hidden; }
         #fill { background: var(--accent); width: 0%; height: 100%; transition: width 0.3s; }
         
         #toast {
@@ -95,29 +115,33 @@
 
     <div class="game-side">
         <div id="boost-alert">🔥 DIVINE BOOST: 3x!</div>
-        <div style="font-weight: bold; color: var(--accent); margin-bottom: 10px;" id="t-name">Kirtland Ohio</div>
-        <div id="temple-btn">🏛️</div>
+        <div style="font-weight: bold; color: var(--accent); margin-bottom: 15px; font-size: 1.2rem;" id="t-name">Loading...</div>
+        
+        <div id="click-container">
+            <img src="" id="temple-img" alt="Temple Photo">
+        </div>
+
         <div class="prog-wrap">
             <div class="bar"><div id="fill"></div></div>
-            <p style="text-align: center; font-size: 0.75rem; margin-top: 8px;" id="t-prog">0% Complete</p>
+            <p style="text-align: center; font-size: 0.75rem; margin-top: 8px; font-weight: bold;" id="t-prog">0% Complete</p>
         </div>
-        <button id="ded-btn" style="display:none; margin-top: 20px; padding: 12px 25px; border-radius: 20px; background: var(--accent); border: none; font-weight: bold; cursor: pointer;" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
+        <button id="ded-btn" style="display:none; margin-top: 20px; padding: 14px 30px; border-radius: 25px; background: var(--accent); border: none; font-weight: bold; cursor: pointer; color: black;" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
     </div>
 </div>
 
 <script>
-    // Initialize state with default values to avoid NaN
     let state = { sp: 0, tIdx: 0, faith: 1.0, counts: {}, boost: 1, theme: 'light', totalEarned: 0 };
 
+    // Pointing to your folder: temples/filename.png
     const temples = [
-        { name: "Kirtland Ohio", goal: 300, icon: "🏛️" },
-        { name: "Logan Utah", goal: 1000, icon: "🏠" },
-        { name: "Lehi Utah", goal: 5000, icon: "☀️" },
-        { name: "Phoenix Arizona", goal: 15000, icon: "🌵" },
-        { name: "Nauvoo Illinois", goal: 50000, icon: "🏗️" },
-        { name: "Salt Lake City", goal: 250000, icon: "🕍" },
-        { name: "Bern Switzerland", goal: 1000000, icon: "🏔️" },
-        { name: "Manila Philippines", goal: 10000000, icon: "🌴" }
+        { name: "Kirtland Ohio", goal: 300, file: "kirtland.png" },
+        { name: "Logan Utah", goal: 1000, file: "logan.png" },
+        { name: "Lehi Utah", goal: 5000, file: "lehi.png" },
+        { name: "Phoenix Arizona", goal: 15000, file: "phoenix.png" },
+        { name: "Nauvoo Illinois", goal: 50000, file: "nauvoo.png" },
+        { name: "Salt Lake City", goal: 250000, file: "salt.png" },
+        { name: "Bern Switzerland", goal: 1000000, file: "bern.png" },
+        { name: "Manila Philippines", goal: 10000000, file: "manila.png" }
     ];
 
     const callings = [
@@ -150,7 +174,6 @@
         const saved = localStorage.getItem('TC_Pro_Save');
         if (saved) {
             const parsed = JSON.parse(saved);
-            // Verify and merge to prevent NaN from corrupted saves
             Object.keys(state).forEach(key => {
                 if (parsed[key] !== undefined && !isNaN(parsed[key]) && typeof parsed[key] !== 'object') {
                     state[key] = parsed[key];
@@ -215,17 +238,12 @@
 
     function getSPS() {
         let total = 0;
-        callings.forEach(g => g.list.forEach(c => {
-            const count = state.counts[c.id] || 0;
-            total += (c.sps * count);
-        }));
-        const val = total * state.faith * state.boost;
-        return isNaN(val) ? 0 : val;
+        callings.forEach(g => g.list.forEach(c => total += (c.sps * (state.counts[c.id] || 0))));
+        return total * state.faith * state.boost;
     }
 
     function getClickBonus() {
-        const bonus = 1 + (Math.floor(state.totalEarned / 1000000) * 0.05);
-        return isNaN(bonus) ? 1 : bonus;
+        return 1 + (Math.floor(state.totalEarned / 1000000) * 0.05);
     }
 
     function handleClick() {
@@ -237,25 +255,23 @@
         updateUI();
     }
 
-    document.getElementById('temple-btn').addEventListener('touchstart', (e) => { e.preventDefault(); handleClick(); });
-    document.getElementById('temple-btn').addEventListener('mousedown', handleClick);
+    // Touch and Mouse support
+    const clickArea = document.getElementById('click-container');
+    clickArea.addEventListener('touchstart', (e) => { e.preventDefault(); handleClick(); });
+    clickArea.addEventListener('mousedown', handleClick);
 
     function updateUI() {
-        // Safe check for NaN
-        if(isNaN(state.sp)) state.sp = 0;
-        if(isNaN(state.totalEarned)) state.totalEarned = 0;
-
         document.getElementById('points').innerText = Math.floor(state.sp).toLocaleString();
         document.getElementById('sps').innerText = format(getSPS());
         document.getElementById('bonus-mult').innerText = getClickBonus().toFixed(2);
         
         const t = temples[state.tIdx];
         document.getElementById('t-name').innerText = t.name;
-        document.getElementById('temple-btn').innerText = t.icon;
+        document.getElementById('temple-img').src = "temples/" + t.file;
 
         const prog = Math.min((state.sp / t.goal) * 100, 100);
-        document.getElementById('fill').style.width = (isNaN(prog) ? 0 : prog) + "%";
-        document.getElementById('t-prog').innerText = (isNaN(prog) ? 0 : Math.floor(prog)) + "% Complete";
+        document.getElementById('fill').style.width = prog + "%";
+        document.getElementById('t-prog').innerText = Math.floor(prog) + "% Complete";
         document.getElementById('ded-btn').style.display = (prog >= 100) ? 'block' : 'none';
 
         callings.forEach(g => g.list.forEach(c => {
@@ -268,7 +284,7 @@
     }
 
     function hardReset() {
-        if(confirm("Are you sure? This will wipe ALL progress!")) {
+        if(confirm("Wipe all data? This cannot be undone!")) {
             localStorage.removeItem('TC_Pro_Save');
             location.reload();
         }
@@ -281,7 +297,6 @@
     }
 
     function format(n) {
-        if (isNaN(n)) return "0";
         if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
         if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
         if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
@@ -291,10 +306,7 @@
 
     function loop() { 
         const income = (getSPS() / 10);
-        if(!isNaN(income)) {
-            state.sp += income; 
-            state.totalEarned += income;
-        }
+        state.sp += income; state.totalEarned += income;
         updateUI(); 
     }
     
