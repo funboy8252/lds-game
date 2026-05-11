@@ -2,301 +2,141 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Temple Clicker: Global</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Temple Clicker: Global Legend</title>
     <style>
         :root {
-            --bg: #f0f2f5; --card: #ffffff; --text: #1c1e21; --sub: #65676b;
-            --primary: #007AFF; --accent: #d4af37; --border: #ddd;
+            --bg: #f8f9fa; --card: rgba(255, 255, 255, 0.9); --text: #1d1d1f; --sub: #86868b;
+            --primary: #0071e3; --accent: #bf953f; --border: rgba(0,0,0,0.1);
         }
-        [data-theme="dark"] {
-            --bg: #18191a; --card: #242526; --text: #e4e6eb; --sub: #b0b3b8;
-            --primary: #2d88ff; --accent: #f1c40f; --border: #3e4042;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; transition: background 0.3s, color 0.3s; }
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; background: var(--bg); 
-            margin: 0; color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-
-        .container { display: flex; flex: 1; flex-direction: column; height: 100%; }
-        @media (min-width: 900px) {
-            .container { flex-direction: row; }
-            .menu-side { width: 420px; height: 100vh !important; border-radius: 0 !important; border-right: 1px solid var(--border); }
-            .game-side { flex: 1; }
-        }
-
-        .header { background: var(--card); padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .score { font-size: 1.8rem; font-weight: 800; }
-        .mode-toggle { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
-
-        .game-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        [data-theme="dark"] { --bg: #000; --card: rgba(28, 28, 30, 0.9); --text: #f5f5f7; --primary: #0a84ff; --accent: #ffd700; --border: rgba(255,255,255,0.1); }
+        [data-theme="ctr"] { --bg: #e8f5e9; --card: #ffffff; --text: #1b5e20; --primary: #2e7d32; --accent: #9e9e9e; --border: #c8e6c9; }
+        [data-theme="liahona"] { --bg: #f4e4bc; --card: #fffdf5; --text: #5d4037; --primary: #bf953f; --accent: #8d6e63; --border: #d7ccc8; }
+        [data-theme="ironrod"] { --bg: #263238; --card: #37474f; --text: #eceff1; --primary: #90a4ae; --accent: #cfd8dc; --border: #455a64; }
+        [data-theme="celestial"] { --bg: #ffffff; --card: #fff; --text: #222; --primary: #d4af37; --accent: #f9f9f9; --border: #eee; }
+        [data-theme="ensign"] { --bg: #fdfaf5; --card: #fff; --text: #333; --primary: #800000; --accent: #d2b48c; --border: #e0d7c6; }
         
-        /* THE PHOTO CLICKER STYLE */
-        #click-container {
-            width: clamp(200px, 40vw, 300px);
-            height: clamp(200px, 40vw, 300px);
-            position: relative;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.05s;
-            border-radius: 20px; /* Rounded corners for the photo */
-            overflow: hidden; /* This crops the image */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border: 4px solid var(--card);
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+
+        .header { padding: 10px 15px; text-align: center; border-bottom: 1px solid var(--border); background: var(--bg); z-index: 10; }
+        .score { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; }
+        .status-msg { font-size: 0.8rem; color: var(--sub); margin-top: 2px; height: 1.2em; transition: 0.5s; font-style: italic; }
+
+        .container { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+        @media (min-width: 900px) { .container { flex-direction: row; } .menu-side { width: 420px; border-left: 1px solid var(--border); } }
+
+        .game-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #click-area {
+            width: clamp(180px, 35vw, 280px); height: clamp(180px, 35vw, 280px);
+            cursor: pointer; border-radius: 40px; overflow: hidden;
+            transition: transform 0.05s; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid var(--card);
         }
-        #click-container:active { transform: scale(0.92); }
+        #click-area:active { transform: scale(0.95); }
+        #temple-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; background: #eee; }
+
+        .menu-side { background: var(--card); display: flex; flex-direction: column; overflow-y: auto; padding: 15px; }
         
-        #temple-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* AUTO-CROP: Makes every photo a perfect square */
-            display: block;
+        .upgrade-btn { 
+            background: var(--bg); padding: 12px; border-radius: 18px; margin-bottom: 10px; 
+            display: flex; align-items: center; border: 1px solid var(--border); 
+            cursor: pointer; transition: 0.1s; width: 100%; text-align: left; color: var(--text);
         }
+        .upgrade-btn:active { transform: scale(0.98); }
+        .upgrade-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
-        #boost-alert { 
-            position: absolute; top: 20px; background: var(--accent); color: #000; 
-            padding: 10px 20px; border-radius: 20px; font-weight: bold; 
-            display: none; z-index: 10; animation: bounce 1s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .icon { font-size: 1.8rem; margin-right: 12px; }
+        .details { flex: 1; }
+        .details b { display: block; font-size: 0.9rem; }
+        .details span { font-size: 0.75rem; color: var(--sub); }
+        .price { background: var(--primary); color: white; padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; min-width: 90px; text-align: center; }
 
-        .menu-side { background: var(--card); height: 50vh; display: flex; flex-direction: column; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-        .scroll-list { flex: 1; overflow-y: auto; padding: 15px; }
-        .section-tag { font-size: 0.75rem; color: var(--accent); font-weight: bold; text-transform: uppercase; margin-top: 15px; display: block; }
+        .prog-container { width: 100%; max-width: 300px; margin-top: 15px; text-align: center; }
+        .bar { background: var(--border); height: 10px; border-radius: 10px; overflow: hidden; }
+        #fill { background: var(--primary); width: 0%; height: 100%; transition: 0.3s; }
 
-        .card { 
-            display: flex; align-items: center; background: var(--bg); padding: 12px; 
-            margin-bottom: 8px; border-radius: 15px; border: 1px solid var(--border);
-        }
-        .info { flex: 1; margin-left: 12px; }
-        .info b { display: block; font-size: 0.95rem; }
-        .info span { font-size: 0.75rem; color: var(--sub); }
-        .buy-btn { 
-            background: var(--primary); color: #fff; border: none; padding: 8px 14px; 
-            border-radius: 18px; font-weight: bold; cursor: pointer; min-width: 80px; 
-        }
-        .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .prog-wrap { width: 80%; max-width: 400px; margin-top: 25px; }
-        .bar { background: var(--border); height: 12px; border-radius: 6px; overflow: hidden; }
-        #fill { background: var(--accent); width: 0%; height: 100%; transition: width 0.3s; }
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal { background: var(--card); padding: 25px; border-radius: 30px; width: 90%; max-width: 350px; text-align: center; max-height: 80vh; overflow-y: auto; }
+        .item-btn { background: var(--bg); padding: 12px; margin: 8px 0; border-radius: 15px; cursor: pointer; font-weight: bold; border: 1px solid var(--border); color: var(--text); display: block; width: 100%; }
         
-        #toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #333; color: white; padding: 10px 20px; border-radius: 30px;
-            font-size: 0.8rem; display: none; z-index: 100;
-        }
+        .toolbar { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .tool-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
-<div id="toast">Progress Saved!</div>
+<div id="map-modal" class="modal-bg" onclick="this.style.display='none'"><div class="modal" onclick="event.stopPropagation()"><h3>Select Temple</h3><div id="map-links"></div></div></div>
+<div id="theme-modal" class="modal-bg" onclick="this.style.display='none'"><div class="modal" onclick="event.stopPropagation()">
+    <h3>Themes</h3>
+    <button class="item-btn" onclick="setTheme('light')">Modern White</button>
+    <button class="item-btn" onclick="setTheme('dark')">Midnight Dark</button>
+    <button class="item-btn" onclick="setTheme('ctr')">CTR (Green/Silver)</button>
+    <button class="item-btn" onclick="setTheme('liahona')">Liahona (Desert/Gold)</button>
+    <button class="item-btn" onclick="setTheme('ironrod')">Iron Rod (Steel/Dark)</button>
+    <button class="item-btn" onclick="setTheme('celestial')">Celestial (Bright Gold)</button>
+    <button class="item-btn" onclick="setTheme('ensign')">Ensign (Burgundy)</button>
+</div></div>
 
 <div class="header">
-    <div>
-        <div class="score" id="points">0</div>
-        <div style="font-size: 0.8rem; color: var(--sub)">SP/sec: <span id="sps">0</span> | Bonus: <span id="bonus-mult">1</span>x</div>
+    <div class="score" id="display-sp">0</div>
+    <div class="status-msg" id="display-status">Wait for it...</div>
+    <div style="font-size: 0.8rem; font-weight: bold; margin-top: 5px;">
+        ⚡ <span id="display-sps">0</span>/s | ✨ Faith: <span id="display-faith">1.0</span>x
     </div>
-    <button class="mode-toggle" onclick="toggleTheme()">🌓 Theme</button>
+    <div class="toolbar">
+        <div class="tool-btn" onclick="openMap()">🗺️ Travel</div>
+        <div class="tool-btn" onclick="document.getElementById('theme-modal').style.display='flex'">🎨 Themes</div>
+        <div class="tool-btn" onclick="hardReset()">🛑 Reset</div>
+    </div>
 </div>
 
 <div class="container">
-    <div class="menu-side">
-        <div style="padding: 15px; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;">
-            <span>Ward Organization</span>
-            <button onclick="hardReset()" style="font-size: 0.6rem; border: none; background: none; color: var(--sub); cursor: pointer;">Reset Data</button>
-        </div>
-        <div class="scroll-list" id="calling-list"></div>
-    </div>
-
     <div class="game-side">
-        <div id="boost-alert">🔥 DIVINE BOOST: 3x!</div>
-        <div style="font-weight: bold; color: var(--accent); margin-bottom: 15px; font-size: 1.2rem;" id="t-name">Loading...</div>
-        
-        <div id="click-container">
-            <img src="" id="temple-img" alt="Temple Photo">
-        </div>
-
-        <div class="prog-wrap">
+        <h3 id="display-tname" style="margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-size: 1rem;">Loading...</h3>
+        <div id="click-area"><img id="temple-img" src="" alt="Temple"></div>
+        <div class="prog-container">
             <div class="bar"><div id="fill"></div></div>
-            <p style="text-align: center; font-size: 0.75rem; margin-top: 8px; font-weight: bold;" id="t-prog">0% Complete</p>
+            <p id="display-prog" style="font-size: 0.8rem; font-weight: 800; margin-top: 8px;">0% Complete</p>
+            <button id="ded-btn" style="display:none; background:var(--primary); color:white; padding:12px 25px; border-radius:30px; border:none; font-weight:900; cursor:pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2);" onclick="dedicate()">DEDICATE TEMPLE</button>
         </div>
-        <button id="ded-btn" style="display:none; margin-top: 20px; padding: 14px 30px; border-radius: 25px; background: var(--accent); border: none; font-weight: bold; cursor: pointer; color: black;" onclick="dedicate()">✨ DEDICATE TEMPLE</button>
     </div>
+    <div class="menu-side" id="menu-container"></div>
 </div>
 
 <script>
-    let state = { sp: 0, tIdx: 0, faith: 1.0, counts: {}, boost: 1, theme: 'light', totalEarned: 0 };
-
-    // Pointing to your folder: temples/filename.png
+    // Price factor reduced from 1.3 to 1.15 for easier progression
+    const PRICE_FACTOR = 1.15;
+    
+    let state = { sp: 0, currentT: 0, unlockedT: 0, faith: 1.0, counts: {}, total: 0, theme: 'light' };
+    
     const temples = [
-        { name: "Kirtland Ohio", goal: 300, file: "kirtland.png" },
-        { name: "Logan Utah", goal: 1000, file: "logan.png" },
-        { name: "Lehi Utah", goal: 5000, file: "lehi.png" },
-        { name: "Phoenix Arizona", goal: 15000, file: "phoenix.png" },
-        { name: "Nauvoo Illinois", goal: 50000, file: "nauvoo.png" },
-        { name: "Salt Lake City", goal: 250000, file: "salt.png" },
-        { name: "Bern Switzerland", goal: 1000000, file: "bern.png" },
-        { name: "Manila Philippines", goal: 10000000, file: "manila.png" }
+        { name: "Kirtland Ohio", goal: 10000, img: "kirtland.png", callings: [{n: "Clerk", c: 10, s: 1, i: "✍️"}, {n: "Exec Sec", c: 150, s: 5, i: "📅"}, {n: "2nd Counselor", c: 1500, s: 20, i: "📋"}, {n: "1st Counselor", c: 10000, s: 90, i: "💼"}, {n: "Bishop", c: 75000, s: 400, i: "🗝️"}, {n: "Recorder", c: 500000, s: 2000, i: "💰"}, {n: "Librarian", c: 3000000, s: 8000, i: "📚"}, {n: "Building Rep", c: 20000000, s: 35000, i: "🔑"}, {n: "High Councilor", c: 150000000, s: 150000, i: "🏛️"}, {n: "Stake President", c: 1000000000, s: 800000, i: "👔"}] },
+        { name: "Manti Utah", goal: 400000, img: "manti.png", callings: [{n: "Gardener", c: 8000, s: 30, i: "🌻"}, {n: "Carpenter", c: 50000, s: 150, i: "🪵"}, {n: "Mason", c: 250000, s: 700, i: "🧱"}, {n: "Dancer", c: 2000000, s: 3500, i: "💃"}, {n: "Cast Member", c: 12000000, s: 15000, i: "🎭"}, {n: "Farmer", c: 75000000, s: 80000, i: "🚜"}, {n: "Chorister", c: 500000000, s: 400000, i: "🎼"}, {n: "Guide", c: 3000000000, s: 2000000, i: "⛪"}, {n: "Patriarch", c: 20000000000, s: 10000000, i: "🖐️"}, {n: "Architect", c: 150000000000, s: 60000000, i: "📐"}] },
+        { name: "Logan Utah", goal: 10000000, img: "logan.png", callings: [{n: "Mt Guide", c: 200000, s: 500, i: "🏔️"}, {n: "Sawyer", c: 1500000, s: 3500, i: "⚙️"}, {n: "Settler", c: 10000000, s: 15000, i: "🚜"}, {n: "Quarryman", c: 70000000, s: 75000, i: "⛏️"}, {n: "Janitor", c: 400000000, s: 400000, i: "🧹"}, {n: "Singer", c: 2500000000, s: 2000000, i: "🎵"}, {n: "Farmer", c: 15000000000, s: 10000000, i: "🐄"}, {n: "Clerk", c: 100000000000, s: 60000000, i: "📂"}, {n: "HP Leader", c: 750000000000, s: 350000000, i: "👴"}, {n: "Castle Builder", c: 5000000000000, s: 1500000000, i: "🏰"}] },
+        { name: "Mesa Arizona", goal: 500000000, img: "mesa.png", callings: [{n: "Picker", c: 5000000, s: 6000, i: "🍊"}, {n: "Crew", c: 35000000, s: 30000, i: "🧵"}, {n: "Cast", c: 150000000, s: 200000, i: "🎭"}, {n: "Decorator", c: 1200000000, s: 1000000, i: "✨"}, {n: "Missionary", c: 8000000000, s: 6000000, i: "☀️"}, {n: "Branch Clerk", c: 50000000000, s: 35000000, i: "🇪🇸"}, {n: "Historian", c: 350000000000, s: 150000000, i: "🌳"}, {n: "Stake Pres", c: 1500000000000, s: 800000000, i: "👔"}, {n: "Gardener", c: 10000000000000, s: 4500000000, i: "🌵"}, {n: "Pioneer", c: 75000000000000, s: 25000000000, i: "🏜️"}] },
+        { name: "Lehi Utah", goal: 5000000000, img: "lehi.png", callings: [{n: "Support", c: 80000000, s: 150000, i: "💻"}, {n: "Dev", c: 500000000, s: 900000, i: "🖥️"}, {n: "Cooling", c: 3500000000, s: 5000000, i: "❄️"}, {n: "Volunteer", c: 20000000000, s: 25000000, i: "⌨️"}, {n: "Researcher", c: 120000000000, s: 150000000, i: "🌳"}, {n: "CEO", c: 800000000000, s: 800000000, i: "🏢"}, {n: "Historian", c: 5000000000000, s: 5000000000, i: "📜"}, {n: "Fiber Tech", c: 35000000000000, s: 25000000000, i: "🔌"}, {n: "Lead", c: 200000000000000, s: 150000000000, i: "💾"}, {n: "Virtual", c: 1500000000000000, s: 800000000000, i: "🌐"}] },
+        { name: "Nauvoo Illinois", goal: 100000000000, img: "nauvoo.png", callings: [{n: "Baptistry", c: 2500000000, s: 2000000, i: "🌊"}, {n: "Initiatory", c: 15000000000, s: 10000000, i: "🕯️"}, {n: "Guide", c: 100000000000, s: 60000000, i: "✨"}, {n: "Witness", c: 750000000000, s: 350000000, i: "💍"}, {n: "Linen", c: 4000000000000, s: 1500000000, i: "👕"}, {n: "Organist", c: 25000000000000, s: 8000000000, i: "🎹"}, {n: "Coord.", c: 150000000000000, s: 35000000000, i: "🕒"}, {n: "Recorder", c: 1000000000000000, s: 150000000000, i: "📜"}, {n: "Counselor", c: 7500000000000000, s: 800000000000, i: "🏛️"}, {n: "President", c: 50000000000000000, s: 4000000000000, i: "🗝️"}] },
+        { name: "Phoenix Arizona", goal: 2000000000000, img: "phoenix.png", callings: [{n: "Teacher", c: 75000000000, s: 300000000, i: "🍎"}, {n: "FHE", c: 500000000000, s: 1500000000, i: "🏠"}, {n: "Chair", c: 3500000000000, s: 10000000000, i: "🎈"}, {n: "YM Pres", c: 25000000000000, s: 55000000000, i: "🏕️"}, {n: "YW Pres", c: 150000000000000, s: 250000000000, i: "🛡️"}, {n: "Clerk", c: 1000000000000000, s: 1500000000000, i: "📁"}, {n: "RS Pres", c: 6000000000000000, s: 7500000000000, i: "🍲"}, {n: "Leader", c: 40000000000000000, s: 35000000000000, i: "👔"}, {n: "Director", c: 250000000000000000, s: 200000000000000, i: "🗺️"}, {n: "Pioneer", c: 1500000000000000000, s: 1000000000000000, i: "🌵"}] },
+        { name: "Salt Lake City", goal: 50000000000000, img: "salt.png", callings: [{n: "Choir", c: 2000000000000, s: 15000000000, i: "🎵"}, {n: "Grounds", c: 12000000000000, s: 75000000000, i: "🌷"}, {n: "Center", c: 75000000000000, s: 350000000000, i: "🗺️"}, {n: "Usher", c: 500000000000000, s: 1500000000000, i: "👔"}, {n: "Historian", c: 3500000000000000, s: 12000000000000, i: "📜"}, {n: "Seventy", c: 20000000000000000, s: 65000000000000, i: "🌍"}, {n: "Apostle", c: 120000000000000000, s: 350000000000000, i: "🕊️"}, {n: "Counsel", c: 800000000000000000, s: 1800000000000000, i: "🗝️"}, {n: "Prophet", c: 5000000000000000000, s: 12000000000000000, i: "📜"}, {n: "Faith", c: 35000000000000000000, s: 75000000000000000, i: "🌎"}] },
+        { name: "Bern Switzerland", goal: 2000000000000000, img: "bern.png", callings: [{n: "Guide", c: 75000000000000, s: 750000000000, i: "🏔️"}, {n: "Trans.", c: 500000000000000, s: 5000000000000, i: "🗣️"}, {n: "Matron", c: 3500000000000000, s: 25000000000000, i: "👗"}, {n: "Admin", c: 25000000000000000, s: 120000000000000, i: "🏢"}, {n: "Guard", c: 150000000000000000, s: 750000000000000, i: "🛡️"}, {n: "Counsel", c: 1000000000000000000, s: 5000000000000000, i: "🌍"}, {n: "Multi", c: 6000000000000000000, s: 25000000000000000, i: "📖"}, {n: "Global", c: 35000000000000000000, s: 150000000000000000, i: "🌎"}, {n: "Art", c: 200000000000000000000, s: 800000000000000000, i: "🎨"}, {n: "Pres.", c: 1500000000000000000000, s: 6000000000000000000, i: "👑"}] },
+        { name: "Manila Philippines", goal: 50000000000000000, img: "manila.png", callings: [{n: "Pioneer", c: 7500000000000000, s: 6000000000000, i: "🏝️"}, {n: "Vol.", c: 60000000000000000, s: 45000000000000, i: "🤝"}, {n: "Tagalog", c: 400000000000000000, s: 300000000000000, i: "📜"}, {n: "Inst.", c: 2500000000000000000, s: 1500000000000000, i: "🏫"}, {n: "Auditor", c: 15000000000000000000, s: 10000000000000000, i: "⚖️"}, {n: "Worker", c: 100000000000000000000, s: 65000000000000000, i: "🕯️"}, {n: "Dist.", c: 600000000000000000000, s: 450000000000000000, i: "🗝️"}, {n: "Counsel", c: 4000000000000000000000, s: 2500000000000000000, i: "🤝"}, {n: "Growth", c: 25000000000000000000000, s: 12000000000000000000, i: "🌏"}, {n: "Pres.", c: 150000000000000000000000, s: 75000000000000000000, i: "📜"}] }
     ];
 
-    const callings = [
-        { cat: "Service", list: [
-            { id: 0, name: "Cleaning Guard", cost: 15, sps: 0.5, icon: "🧹" },
-            { id: 1, name: "Youth Volunteer", cost: 150, sps: 3, icon: "🙌" },
-            { id: 2, name: "Activity Committee", cost: 1200, sps: 18, icon: "🎉" },
-            { id: 3, name: "Family Search Aide", cost: 8000, sps: 85, icon: "🌳" },
-            { id: 4, name: "Indexing Hero", cost: 40000, sps: 350, icon: "💻" }
-        ]},
-        { cat: "Ward Leadership", list: [
-            { id: 5, name: "Primary Teacher", cost: 150000, sps: 1200, icon: "🖍️" },
-            { id: 6, name: "Ward Organist", cost: 800000, sps: 5500, icon: "🎹" },
-            { id: 7, name: "EQ Counselor", cost: 4000000, sps: 22000, icon: "📋" },
-            { id: 8, name: "RS President", cost: 20000000, sps: 95000, icon: "🍲" },
-            { id: 9, name: "Bishopric Member", cost: 100000000, sps: 400000, icon: "🗝️" }
-        ]},
-        { cat: "Global Work", list: [
-            { id: 10, name: "Full-Time Elder", cost: 600000000, sps: 2000000, icon: "👔" },
-            { id: 11, name: "Sister Missionary", cost: 600000000, sps: 2100000, icon: "👗" },
-            { id: 12, name: "Mission President", cost: 3000000000, sps: 12000000, icon: "🌏" },
-            { id: 13, name: "Area Architect", cost: 15000000000, sps: 55000000, icon: "📐" },
-            { id: 14, name: "Temple President", cost: 100000000000, sps: 300000000, icon: "🏛️" },
-            { id: 15, name: "General Authority", cost: 500000000000, sps: 1500000000, icon: "🕴️" },
-            { id: 16, name: "Prophet", cost: 2000000000000, sps: 8000000000, icon: "📜" }
-        ]}
+    const flavorTiers = [
+        { t: 0, msgs: ["A small spark of faith.", "The ward is just starting out.", "Finding joy in service."] },
+        { t: 1e5, msgs: ["The local community is noticing.", "Ward socials are buzzing.", "Missionary work is picking up."] },
+        { t: 1e10, msgs: ["Your influence is reaching the city.", "The choir sounds heavenly.", "A pillar of strength."] },
+        { t: 1e16, msgs: ["International growth is exploding.", "Prophetic visions are clear.", "A beacon of light."] }
     ];
-
-    function init() {
-        const saved = localStorage.getItem('TC_Pro_Save');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            Object.keys(state).forEach(key => {
-                if (parsed[key] !== undefined && !isNaN(parsed[key]) && typeof parsed[key] !== 'object') {
-                    state[key] = parsed[key];
-                }
-            });
-            if (parsed.counts) state.counts = parsed.counts;
-        }
-        
-        document.documentElement.setAttribute('data-theme', state.theme || 'light');
-        renderCallings();
-        updateUI();
-        setInterval(loop, 100);
-        setInterval(checkBoost, 30000);
-    }
-
-    function toggleTheme() {
-        state.theme = state.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', state.theme);
-        save();
-    }
-
-    function renderCallings() {
-        const container = document.getElementById('calling-list');
-        container.innerHTML = '';
-        callings.forEach(group => {
-            container.innerHTML += `<span class="section-tag">${group.cat}</span>`;
-            group.list.forEach(c => {
-                const count = state.counts[c.id] || 0;
-                const cost = Math.floor(c.cost * Math.pow(1.18, count));
-                container.innerHTML += `
-                    <div class="card">
-                        <div style="font-size: 1.5rem;">${c.icon}</div>
-                        <div class="info"><b>${c.name} (${count})</b><span>+${format(c.sps)} SP/s</span></div>
-                        <button class="buy-btn" id="btn-${c.id}" onclick="buy(${c.id}, ${c.cost})">${format(cost)}</button>
-                    </div>`;
-            });
-        });
-    }
-
-    function buy(id, base) {
-        const count = state.counts[id] || 0;
-        const cost = Math.floor(base * Math.pow(1.18, count));
-        if (state.sp >= cost) {
-            state.sp -= cost;
-            state.counts[id] = count + 1;
-            renderCallings();
-            updateUI();
-            save();
-        }
-    }
-
-    function checkBoost() {
-        if (Math.random() > 0.8 && state.boost === 1) {
-            state.boost = 3;
-            document.getElementById('boost-alert').style.display = 'block';
-            setTimeout(() => {
-                state.boost = 1;
-                document.getElementById('boost-alert').style.display = 'none';
-            }, 15000);
-        }
-    }
-
-    function getSPS() {
-        let total = 0;
-        callings.forEach(g => g.list.forEach(c => total += (c.sps * (state.counts[c.id] || 0))));
-        return total * state.faith * state.boost;
-    }
-
-    function getClickBonus() {
-        return 1 + (Math.floor(state.totalEarned / 1000000) * 0.05);
-    }
-
-    function handleClick() {
-        const amount = (1 + (getSPS() * 0.15)) * state.faith * getClickBonus();
-        if(!isNaN(amount)) {
-            state.sp += amount;
-            state.totalEarned += amount;
-        }
-        updateUI();
-    }
-
-    // Touch and Mouse support
-    const clickArea = document.getElementById('click-container');
-    clickArea.addEventListener('touchstart', (e) => { e.preventDefault(); handleClick(); });
-    clickArea.addEventListener('mousedown', handleClick);
-
-    function updateUI() {
-        document.getElementById('points').innerText = Math.floor(state.sp).toLocaleString();
-        document.getElementById('sps').innerText = format(getSPS());
-        document.getElementById('bonus-mult').innerText = getClickBonus().toFixed(2);
-        
-        const t = temples[state.tIdx];
-        document.getElementById('t-name').innerText = t.name;
-        document.getElementById('temple-img').src = "temples/" + t.file;
-
-        const prog = Math.min((state.sp / t.goal) * 100, 100);
-        document.getElementById('fill').style.width = prog + "%";
-        document.getElementById('t-prog').innerText = Math.floor(prog) + "% Complete";
-        document.getElementById('ded-btn').style.display = (prog >= 100) ? 'block' : 'none';
-
-        callings.forEach(g => g.list.forEach(c => {
-            const btn = document.getElementById(`btn-${c.id}`);
-            if(btn) {
-                const cost = Math.floor(c.cost * Math.pow(1.18, (state.counts[c.id] || 0)));
-                btn.disabled = state.sp < cost;
-            }
-        }));
-    }
-
-    function hardReset() {
-        if(confirm("Wipe all data? This cannot be undone!")) {
-            localStorage.removeItem('TC_Pro_Save');
-            location.reload();
-        }
-    }
-
-    function dedicate() {
-        state.faith += 0.5; state.sp = 0; state.counts = {};
-        state.tIdx = (state.tIdx + 1) % temples.length;
-        renderCallings(); updateUI(); save();
-    }
 
     function format(n) {
+        if (n >= 1e33) return (n/1e33).toFixed(1) + 'Dc';
+        if (n >= 1e30) return (n/1e30).toFixed(1) + 'No';
+        if (n >= 1e27) return (n/1e27).toFixed(1) + 'Oc';
+        if (n >= 1e24) return (n/1e24).toFixed(1) + 'Sp';
+        if (n >= 1e21) return (n/1e21).toFixed(1) + 'Sx';
+        if (n >= 1e18) return (n/1e18).toFixed(1) + 'Qi';
+        if (n >= 1e15) return (n/1e15).toFixed(1) + 'Qa';
         if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
         if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
         if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
@@ -304,15 +144,105 @@
         return Math.floor(n);
     }
 
-    function loop() { 
-        const income = (getSPS() / 10);
-        state.sp += income; state.totalEarned += income;
-        updateUI(); 
+    function getSPS() {
+        let total = 0;
+        for (let tIdx in state.counts) {
+            temples[tIdx].callings.forEach((c, i) => { total += (state.counts[tIdx][i] || 0) * c.s; });
+        }
+        return total * state.faith;
     }
-    
-    function save() { localStorage.setItem('TC_Pro_Save', JSON.stringify(state)); }
 
-    init();
+    function buildMenu() {
+        const container = document.getElementById('menu-container');
+        container.innerHTML = ''; 
+        const t = temples[state.currentT];
+        if (!state.counts[state.currentT]) state.counts[state.currentT] = Array(t.callings.length).fill(0);
+        t.callings.forEach((c, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'upgrade-btn';
+            btn.id = `calling-${i}`;
+            btn.onclick = () => buy(i);
+            btn.innerHTML = `<div class="icon">${c.i}</div><div class="details"><b id="n-${i}">${c.n} (0)</b><span id="s-${i}">+0/s</span></div><div class="price" id="p-${i}">0</div>`;
+            container.appendChild(btn);
+        });
+        updateMenuValues();
+    }
+
+    function updateMenuValues() {
+        const t = temples[state.currentT];
+        t.callings.forEach((c, i) => {
+            const count = state.counts[state.currentT][i] || 0;
+            const cost = Math.floor(c.c * Math.pow(PRICE_FACTOR, count));
+            const btn = document.getElementById(`calling-${i}`);
+            if(!btn) return;
+            document.getElementById(`n-${i}`).innerText = `${c.n} (${count})`;
+            document.getElementById(`s-${i}`).innerText = `+${format(c.s * state.faith)}/s`;
+            document.getElementById(`p-${i}`).innerText = format(cost);
+            if (state.sp >= cost) btn.classList.remove('disabled'); else btn.classList.add('disabled');
+        });
+    }
+
+    function updateMainUI() {
+        document.getElementById('display-sp').innerText = format(state.sp);
+        document.getElementById('display-sps').innerText = format(getSPS());
+        document.getElementById('display-faith').innerText = state.faith.toFixed(1);
+        const t = temples[state.currentT];
+        document.getElementById('display-tname').innerText = t.name + (state.currentT < state.unlockedT ? " (✓)" : "");
+        document.getElementById('temple-img').src = "temples/" + t.img;
+        const prog = Math.min((state.sp / t.goal) * 100, 100);
+        document.getElementById('fill').style.width = prog + "%";
+        document.getElementById('display-prog').innerText = Math.floor(prog) + "% Complete";
+        document.getElementById('ded-btn').style.display = (prog >= 100 && state.currentT === state.unlockedT && state.currentT < temples.length-1) ? 'inline-block' : 'none';
+        updateMenuValues();
+    }
+
+    function buy(i) {
+        const t = temples[state.currentT];
+        const count = state.counts[state.currentT][i] || 0;
+        const cost = Math.floor(t.callings[i].c * Math.pow(PRICE_FACTOR, count));
+        if (state.sp >= cost) { state.sp -= cost; state.counts[state.currentT][i]++; updateMainUI(); save(); }
+    }
+
+    function handleClick() {
+        // Clicks are now 10% of SPS (buffed from 5%)
+        const gain = Math.max(1, (getSPS() * 0.10)) * state.faith;
+        state.sp += gain; state.total += gain; updateMainUI();
+    }
+
+    function openMap() {
+        const container = document.getElementById('map-links'); container.innerHTML = '';
+        temples.forEach((t, i) => { if (i <= state.unlockedT) {
+            const item = document.createElement('div'); item.className = 'item-btn'; item.innerText = t.name;
+            item.onclick = () => { state.currentT = i; buildMenu(); updateMainUI(); document.getElementById('map-modal').style.display='none'; };
+            container.appendChild(item);
+        }});
+        document.getElementById('map-modal').style.display = 'flex';
+    }
+
+    function setTheme(t) { state.theme = t; document.body.setAttribute('data-theme', t); buildMenu(); updateMainUI(); save(); document.getElementById('theme-modal').style.display='none'; }
+    
+    function dedicate() { 
+        state.unlockedT++; 
+        state.faith += 2.0; // Buffed from 1.5
+        state.currentT = state.unlockedT; 
+        buildMenu(); 
+        updateMainUI(); 
+        save(); 
+    }
+
+    function cycleStatus() {
+        const el = document.getElementById('display-status');
+        const tier = [...flavorTiers].reverse().find(f => state.total >= f.t);
+        el.style.opacity = 0; setTimeout(() => { el.innerText = tier.msgs[Math.floor(Math.random() * tier.msgs.length)]; el.style.opacity = 1; }, 500);
+    }
+    function hardReset() { if(confirm("Start your journey over?")) { localStorage.clear(); location.reload(); } }
+    function save() { localStorage.setItem('TC_BALANCED_V1', JSON.stringify(state)); }
+    function load() { const data = localStorage.getItem('TC_BALANCED_V1'); if (data) state = JSON.parse(data); setTheme(state.theme || 'light'); }
+
+    document.getElementById('click-area').onclick = handleClick;
+    window.onload = load;
+    setInterval(() => { state.sp += getSPS()/10; state.total += getSPS()/10; updateMainUI(); }, 100);
+    setInterval(cycleStatus, 6000);
 </script>
 </body>
 </html>
